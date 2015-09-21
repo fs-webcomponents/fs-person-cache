@@ -36,9 +36,7 @@ Basic example:
             first = this.ensureConfig(clientName, personId);
         this.cache[clientName][personId].observers.push(observer);
         if(this.cache[clientName][personId].person){
-          setTimeout(function(){
-            observer(self.cache[clientName][personId].person);
-          });
+          observer._setPerson(self.cache[clientName][personId].person);
         }
         return first;
       },
@@ -51,11 +49,18 @@ Basic example:
         this.cache[clientName][personId].person = person;
         var observers = this.cache[clientName][personId].observers;
         for(var i = 0; i < observers.length; i++){
-          (function(observer){
-            setTimeout(function(){
-              observer(person);
-            });
-          })(observers[i]);
+          observers[i]._setPerson(person);
+        }
+      },
+      
+      removeObserver: function(clientName, personId, observer){
+        this.ensureConfig(clientName, personId);
+        var observers = this.cache[clientName][personId].observers;
+        for(var i = 0; i < observers.length; i++){
+          if(observers[i] === observer){
+            observers.splice(i, 1);
+            return;
+          }
         }
       },
       
@@ -110,12 +115,13 @@ Basic example:
         this._setup();
       },
       
-      _setup: function(){
-        if(this.personId){
+      _setup: function(newId, oldId){
+        if(oldId){
+          PersonCache.removeObserver(this.clientName, oldId, this);
+        }
+        if(newId){
           var self = this;
-          var first = PersonCache.addObserver(this.clientName, this.personId, function(person){
-            self._setPerson(person);
-          });
+          var first = PersonCache.addObserver(this.clientName, this.personId, this);
           
           // If we're the first attached observer then we're in charge of requesting
           // the person when the user has authenticated
