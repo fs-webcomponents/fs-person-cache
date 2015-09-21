@@ -86,7 +86,8 @@ Basic example:
         personId: {
           type: String,
           notify: true,
-          reflectToAttribute: true
+          reflectToAttribute: true,
+          observer: '_setup'
         },
         
         person: {
@@ -106,22 +107,28 @@ Basic example:
        * - No data; authenticated
        */
       ready: function(){
-        var self = this;
-        var first = PersonCache.addObserver(this.clientName, this.personId, function(person){
-          self._setPerson(person);
-        });
-        
-        // If we're the first attached observer then we're in charge of requesting
-        // the person when the user has authenticated
-        if(first){
-          if(this.isAuthenticated()){
-            this._requestPerson();
-          } else {
-            this.$.client.addEventListener('onAuthenticatedChanged', function(e){
-              if(e.detail.value){
-                self._requestPerson();
-              }
-            });
+        this._setup();
+      },
+      
+      _setup: function(){
+        if(this.personId){
+          var self = this;
+          var first = PersonCache.addObserver(this.clientName, this.personId, function(person){
+            self._setPerson(person);
+          });
+          
+          // If we're the first attached observer then we're in charge of requesting
+          // the person when the user has authenticated
+          if(first){
+            if(this.isAuthenticated()){
+              this._requestPerson();
+            } else {
+              this.$.client.addEventListener('onAuthenticatedChanged', function(e){
+                if(e.detail.value){
+                  self._requestPerson();
+                }
+              });
+            }
           }
         }
       },
