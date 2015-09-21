@@ -1,0 +1,139 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../fs-client/fs-client.html">
+<link rel="import" href="../fs-behavior/fs-behavior.html">
+
+<!--
+Cache for FamilySearch Person requests.
+
+Basic example:
+
+    <fs-person-cache person-id="PPP-PPPP"></fs-person-cache>
+
+@group FamilySearch Elements
+@element fs-person-cache
+@demo demo/index.html
+-->
+<dom-module id="fs-person-cache">
+  <template>
+    <fs-client id="client" name="{{clientName}}"></fs-client>
+  </template>
+</dom-module>
+
+<script>
+  (function(){
+    
+    var PersonCache = {
+      
+      // Keyed by clientName and personId
+      cache: {},
+      
+      /**
+       * Register an observer for a given clientName/personId pair.
+       * Returns true if the observer was the first one attached
+       */
+      addObserver: function(clientName, personId, observer){
+        var self = this,
+            first = this.ensureConfig(clientName, personId);
+        this.cache[clientName][personId].observers.push(observer);
+        if(this.cache[clientName][personId].person){
+          setTimeout(function(){
+            observer(self.cache[clientName][personId].person);
+          });
+        }
+        return first;
+      },
+      
+      /**
+       * Saves the person and notifies all registered observers.
+       */
+      setPerson: function(clientName, personId, person){
+        this.ensureConfig(clientName, personId);
+        this.cache[clientName][personId].person = person;
+        var observers = this.cache[clientName][personId].observers;
+        for(var i = 0; i < observers.length; i++){
+          (function(observer){
+            setTimeout(function(){
+              observer(person);
+            });
+          })(observers[i]);
+        }
+      },
+      
+      /**
+       * Ensures that a config object for the person exists.
+       * Returns true if the config had to be created.
+       */
+      ensureConfig: function(clientName, personId){
+        if(!this.cache[clientName]){
+          this.cache[clientName] = {};
+        }
+        if(!this.cache[clientName][personId]){
+          this.cache[clientName][personId] = {
+            observers: []
+          };
+          return true;
+        }
+      }
+      
+    };
+    
+    Polymer({
+      
+      is: 'fs-person-cache',
+      
+      properties: {
+
+        personId: {
+          type: String,
+          notify: true,
+          reflectToAttribute: true
+        },
+        
+        person: {
+          type: Object,
+          notify: true,
+          readOnly: true
+        }
+        
+      },
+      
+      behaviors: [FSBehavior],
+      
+      /**
+       * Multiple states we could be in:
+       * - Data
+       * - No data; unauthenticated
+       * - No data; authenticated
+       */
+      ready: function(){
+        var self = this;
+        var first = PersonCache.addObserver(this.clientName, this.personId, function(person){
+          self._setPerson(person);
+        });
+        
+        // If we're the first attached observer then we're in charge of requesting
+        // the person when the user has authenticated
+        if(first){
+          if(this.isAuthenticated()){
+            this._requestPerson();
+          } else {
+            this.$.client.addEventListener('onAuthenticatedChanged', function(e){
+              if(e.detail.value){
+                self._requestPerson();
+              }
+            });
+          }
+        }
+      },
+      
+      _requestPerson: function(){
+        var self = this;
+        this.getClient().getPerson(this.personId).then(function(response){
+          PersonCache.setPerson(self.clientName, self.personId, response.getPerson());
+        });
+      }
+      
+    });
+    
+  })();
+</script>
