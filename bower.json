@@ -1,6 +1,6 @@
 {
   "name": "fs-person-cache",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "authors": [
     "Justin York"
   ],
@@ -12,15 +12,15 @@
   ],
   "main": "fs-person-cache.html",
   "license": "MIT",
-  "homepage": "https://github.com/york-solutions/fs-person-cache/",
+  "homepage": "https://github.com/fs-webcomponents/fs-person-cache/",
   "ignore": [
     "/.*",
     "/test/"
   ],
   "dependencies": {
     "polymer": "Polymer/polymer#^1.0.0",
-    "fs-client": "york-solutions/fs-client#0.1.9",
-    "fs-behavior": "york-solutions/fs-behavior#0.1.4"
+    "fs-client": "fs-webcomponents/fs-client#0.1.9",
+    "fs-behavior": "fs-webcomponents/fs-behavior#0.1.4"
   },
   "devDependencies": {
     "iron-component-page": "PolymerElements/iron-component-page#^1.0.0"
