@@ -129,7 +129,7 @@ Basic example:
             if(this.isAuthenticated()){
               this._requestPerson();
             } else {
-              this.$.client.addEventListener('onAuthenticatedChanged', function(e){
+              this.$.client.addEventListener('authenticated-changed', function(e){
                 if(e.detail.value){
                   self._requestPerson();
                 }
