@@ -1,3 +1,3 @@
 # fs-person-cache
 
-Cache person requests
+__This element is no longer being used.__
